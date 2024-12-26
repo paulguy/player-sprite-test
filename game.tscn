@@ -1,0 +1,26 @@
+[gd_scene load_steps=2 format=3 uid="uid://da47jofjc8nb6"]
+
+[ext_resource type="PackedScene" uid="uid://bdtjj3x8a57vt" path="res://player.tscn" id="1_dd3kg"]
+
+[node name="Game" type="Node2D"]
+
+[node name="Player" parent="." instance=ExtResource("1_dd3kg")]
+position = Vector2(38, 35)
+
+[node name="Polygon2D" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(3, 63, 158, 63, 158, -1, 240, 1, 240, 129, 268, 130, 267, 107, 294, 105, 294, 83, 327, 86, 326, 58, 435, 57, 444, 200, 3, 194)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D"]
+build_mode = 1
+polygon = PackedVector2Array(3, 63, 158, 63, 158, -1, 240, 1, 240, 129, 268, 130, 267, 107, 294, 105, 294, 83, 327, 86, 326, 58, 435, 57, 444, 200, 3, 194)
+
+[node name="Polygon2D2" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(158, -61, 240, -64, 240, -126, 158, -126)
+
+[node name="StaticBody2D2" type="StaticBody2D" parent="."]
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D2"]
+build_mode = 1
+polygon = PackedVector2Array(158, -61, 240, -64, 240, -126, 158, -126)
