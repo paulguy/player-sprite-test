@@ -7,20 +7,30 @@
 [node name="Player" parent="." instance=ExtResource("1_dd3kg")]
 position = Vector2(38, 35)
 
-[node name="Polygon2D" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(3, 63, 158, 63, 158, -1, 240, 1, 240, 129, 268, 130, 267, 107, 294, 105, 294, 83, 327, 86, 326, 58, 435, 57, 444, 200, 3, 194)
-
 [node name="StaticBody2D" type="StaticBody2D" parent="."]
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D"]
 build_mode = 1
-polygon = PackedVector2Array(3, 63, 158, 63, 158, -1, 240, 1, 240, 129, 268, 130, 267, 107, 294, 105, 294, 83, 327, 86, 326, 58, 435, 57, 444, 200, 3, 194)
+polygon = PackedVector2Array(3, 63, 158, 63, 158, -1, 240, 1, 240, 129, 268, 130, 267, 107, 294, 105, 294, 83, 327, 86, 326, 58, 435, 57, 444, 200, -186, 184, -185, -2, 3, -2)
 
-[node name="Polygon2D2" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(158, -61, 240, -64, 240, -126, 158, -126)
+[node name="Polygon2D" type="Polygon2D" parent="StaticBody2D"]
+polygon = PackedVector2Array(3, 63, 158, 63, 158, -1, 240, 1, 240, 129, 268, 130, 267, 107, 294, 105, 294, 83, 327, 86, 326, 58, 435, 57, 444, 200, -186, 184, -185, -2, 3, -2)
 
 [node name="StaticBody2D2" type="StaticBody2D" parent="."]
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D2"]
 build_mode = 1
 polygon = PackedVector2Array(158, -61, 240, -64, 240, -126, 158, -126)
+
+[node name="Polygon2D" type="Polygon2D" parent="StaticBody2D2"]
+polygon = PackedVector2Array(158, -61, 240, -64, 240, -126, 158, -126)
+
+[node name="StaticBody2D3" type="StaticBody2D" parent="."]
+position = Vector2(-237, 39)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D3"]
+build_mode = 1
+polygon = PackedVector2Array(158, -61, 240, -61, 240, -126, 158, -126)
+
+[node name="Polygon2D" type="Polygon2D" parent="StaticBody2D3"]
+polygon = PackedVector2Array(158, -61, 240, -61, 240, -126, 158, -126)

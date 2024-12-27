@@ -5,12 +5,14 @@ const FALL_AWAY_SPEED : float = 75.0
 const FALL_SPEED : float = 300.0
 const JUMP_POWER : float = 300.0
 const START_WALKING_FRAMES : int = 2
+const CROUCH_DIMENSIONS : Vector2 = Vector2(18.0, 15.0)
 
 @onready var sprite : AnimatedSprite2D = $"Sprite"
 @onready var body_coll : CollisionShape2D = $"Body Collision"
 @onready var grab_coll : CollisionShape2D = $"Grab Collision"
 @onready var ray : RayCast2D = $"Ray"
-@onready var standing_height : float = $"Body Collision".shape.size.y
+@onready var standing_pos : Vector2 = $"Body Collision".position
+@onready var standing_size : Vector2 = $"Body Collision".shape.size
 
 enum Action {
 	STANDING,
@@ -22,7 +24,11 @@ enum Action {
 	FALLING,
 	GRABBING,
 	LEDGE_CLIMB,
-	START_STANDING
+	START_STANDING,
+	START_CROUCHING,
+	CROUCHING,
+	START_CRAWLING,
+	CRAWLING
 }
 
 var action : Action = Action.STANDING
@@ -34,6 +40,13 @@ var falling_open_wall : bool = true
 var last_y : float = 0.0
 var do_movement : bool = true
 
+func set_facing_dir(dir : int):
+	facing_dir = dir
+	grab_coll.position.x = absf(grab_coll.position.x) * dir
+	grab_coll.shape.b.x = absf(grab_coll.shape.b.x) * dir
+	ray.position = grab_coll.position
+	ray.target_position.x = grab_coll.shape.b.x
+
 func stand_anim(dir : int):
 	action = Action.STANDING
 	air_dir = 0
@@ -42,7 +55,7 @@ func stand_anim(dir : int):
 	else:
 		sprite.play(&"Standing L")
 
-func do_walk_anim(dir : int):
+func walk_anim(dir : int):
 	action = Action.WALKING
 	air_dir = dir
 	if dir > 0:
@@ -51,7 +64,7 @@ func do_walk_anim(dir : int):
 		sprite.play(&"Walking L")
 	sprite.set_frame_and_progress(START_WALKING_FRAMES, 0.0)
 
-func walk_anim(dir : int):
+func start_walk_anim(dir : int):
 	action = Action.START_WALKING
 	animation_done = false
 	if dir > 0:
@@ -79,15 +92,9 @@ func fall_anim(dir : int):
 	action = Action.FALLING
 	ray.enabled = true
 	if dir > 0:
-		grab_coll.position.x = absf(grab_coll.position.x)
-		grab_coll.shape.b.x = absf(grab_coll.shape.b.x)
 		sprite.play(&"Falling R")
 	else:
-		grab_coll.position.x = -absf(grab_coll.position.x)
-		grab_coll.shape.b.x = -absf(grab_coll.shape.b.x)
 		sprite.play(&"Falling L")
-	ray.position = grab_coll.position
-	ray.target_position.x = grab_coll.shape.b.x
 
 func grab_anim(dir : int):
 	action = Action.GRABBING
@@ -104,6 +111,60 @@ func ledge_climb_anim(dir : int):
 	else:
 		sprite.play(&"Ledge Climb L")
 
+func start_crouch_anim(dir : int):
+	action = Action.START_CROUCHING
+	animation_done = false
+	if dir > 0:
+		sprite.play(&"Start Crouch R")
+	else:
+		sprite.play(&"Start Crouch L")
+
+func crouch_anim(dir : int):
+	action = Action.CROUCHING
+	if dir > 0:
+		sprite.play(&"Crouch R")
+	else:
+		sprite.play(&"Crouch L")
+
+func crouch_check(dir : int):
+	# disable grab collider
+	# needed for climbing up in to a crouch
+	grab_coll.disabled = true
+	# store original values
+	var orig_pos : Vector2
+	if action == Action.LEDGE_CLIMB:
+		# try placing self in new position for climbing up
+		orig_pos = position
+		position += ray.position + ray.target_position
+	var orig_coll_pos : Vector2 = body_coll.position
+	var orig_size : Vector2 = body_coll.shape.size
+	# set new values
+	body_coll.position = Vector2(0.0, CROUCH_DIMENSIONS.y / -2.0)
+	body_coll.shape.size = CROUCH_DIMENSIONS
+	# check collision at the new location
+	var coll : KinematicCollision2D = move_and_collide(Vector2.ZERO)
+	if coll == null:
+		# no collision
+		# transition to crouching
+		if action == Action.LEDGE_CLIMB:
+			# transition from climb up animation
+			# just go straight to the crouch position
+			crouch_anim(dir)
+		else:
+			# transition from standing
+			# transition through crouching animation
+			start_crouch_anim(dir)
+	else:
+		# collision
+		# restore collision
+		body_coll.position = orig_coll_pos
+		body_coll.shape.size = orig_size
+		if action == Action.LEDGE_CLIMB:
+			position = orig_pos
+			grab_coll.disabled = false
+			grab_anim(dir)
+		# don't change anim/action
+
 func start_stand_anim(dir : int):
 	action = Action.START_STANDING
 	animation_done = false
@@ -115,8 +176,15 @@ func start_stand_anim(dir : int):
 func stand_check(dir : int):
 	# disable grab collider
 	grab_coll.disabled = true
-	# try placing self in new position
-	position += ray.position + ray.target_position
+	var orig_pos : Vector2
+	if action == Action.LEDGE_CLIMB:
+		# try placing self in new position
+		orig_pos = position
+		position += ray.position + ray.target_position
+	var orig_coll_pos : Vector2 = body_coll.position
+	var orig_coll_size : Vector2 = body_coll.shape.size
+	body_coll.position = standing_pos
+	body_coll.shape.size = standing_size
 	# check collision at the new location
 	var coll : KinematicCollision2D = move_and_collide(Vector2.ZERO)
 	if coll == null:
@@ -125,10 +193,16 @@ func stand_check(dir : int):
 		start_stand_anim(dir)
 	else:
 		# collision
-		# move player back and regrab
-		position -= ray.position + ray.target_position
-		grab_coll.disabled = false
-		grab_anim(dir)
+		if action == Action.LEDGE_CLIMB:
+			# crouch failed
+			# move player back and regrab
+			position = orig_pos
+			body_coll.position = orig_coll_pos
+			body_coll.shape.size = orig_coll_size
+			grab_coll.disabled = false
+			grab_anim(dir)
+		# try transitioning to a crouch
+		crouch_check(dir)
 
 func _on_sprite_animation_finished() -> void:
 	animation_done = true
@@ -152,7 +226,7 @@ func transition_animation(grounded : bool,
 				elif can_drop:
 					fall_anim(facing_dir)
 			else:
-				facing_dir = intent_dir
+				set_facing_dir(intent_dir)
 				if pressed_dir == intent_dir:
 					# still pressing the same direction
 					next_anim.call(facing_dir)
@@ -171,11 +245,15 @@ func _physics_process(delta : float):
 	var hit_wall : bool = is_on_wall()
 	var grabbing : bool = false
 
-	for i in get_slide_collision_count():
-		var coll : KinematicCollision2D = get_slide_collision(i)
-		if coll.get_local_shape() == grab_coll:
-			grabbing = true
-			break
+	if not grab_coll.disabled:
+		for i in get_slide_collision_count():
+			var coll : KinematicCollision2D = get_slide_collision(i)
+			if coll.get_local_shape() == grab_coll:
+				grabbing = true
+				break
+
+	if grounded or grabbing:
+		velocity.y = 0.0
 
 	if Input.is_action_pressed(&"move_right"):
 		pressed_dir += 1
@@ -192,6 +270,8 @@ func _physics_process(delta : float):
 				if jumping:
 					# jump
 					jump_anim(facing_dir)
+				elif Input.is_action_just_pressed(&"crouch"):
+					crouch_check(facing_dir)
 				elif pressed_dir != 0:
 					if pressed_dir != facing_dir:
 						# pressed in opposite direction: turn
@@ -199,7 +279,7 @@ func _physics_process(delta : float):
 						turn_anim(intent_dir)
 					else:
 						# pressed in same direction: walk
-						walk_anim(facing_dir)
+						start_walk_anim(facing_dir)
 			else:
 				# fall
 				fall_anim(facing_dir)
@@ -207,13 +287,13 @@ func _physics_process(delta : float):
 			transition_animation(grounded,
 								pressed_dir,
 								true, false,
-								walk_anim,
+								start_walk_anim,
 								stand_anim)
 		Action.START_WALKING:
 			transition_animation(grounded,
 								pressed_dir,
 								true, false,
-								do_walk_anim,
+								walk_anim,
 								stand_anim)
 		Action.WALKING:
 			if grounded:
@@ -249,8 +329,9 @@ func _physics_process(delta : float):
 			if hit_wall:
 				air_dir = 0
 			velocity.x = FALL_AWAY_SPEED * air_dir
-			velocity.y += FALL_SPEED * delta
 			if velocity.y > 0.0:
+				# initializa the correct value at the peak
+				# raycasting is disabled at this point, so force the update
 				ray.force_raycast_update()
 				if ray.is_colliding():
 					# blocked
@@ -268,7 +349,7 @@ func _physics_process(delta : float):
 				stand_anim(facing_dir)
 			else:
 				# falling
-				ray.force_raycast_update()
+				#ray.force_raycast_update()
 				if ray.is_colliding():
 					# blocked
 					if falling_open_wall:
@@ -299,16 +380,12 @@ func _physics_process(delta : float):
 					# open
 					falling_open_wall = true
 				velocity.x = FALL_AWAY_SPEED * air_dir
-				velocity.y += FALL_SPEED * delta
 				last_y = position.y
 		Action.GRABBING:
-			# still fall so the collision is continually detected
-			velocity.y = FALL_SPEED * delta
-
 			if grabbing:
 				# still grabbing
 				if (facing_dir < 0 and Input.is_action_just_pressed(&"move_left")) or \
-					 (facing_dir > 0 and Input.is_action_just_pressed(&"move_right")):
+				   (facing_dir > 0 and Input.is_action_just_pressed(&"move_right")):
 					# pressing towards ledge
 					# start climbing up
 					ledge_climb_anim(facing_dir)
@@ -339,5 +416,28 @@ func _physics_process(delta : float):
 								 false, false,
 								 stand_anim,
 								 stand_anim)
+		Action.START_CROUCHING:
+			transition_animation(grounded,
+								 pressed_dir,
+								 false, false,
+								 crouch_anim,
+								 crouch_anim)
+		Action.CROUCHING:
+			if grounded:
+				if Input.is_action_just_pressed(&"climb_up"):
+					stand_check(facing_dir)
+				elif pressed_dir != 0:
+					if pressed_dir != facing_dir:
+						# pressed in opposite direction: turn
+						pass
+					else:
+						# pressed in same direction: crawl
+						pass
+			else:
+				# fall
+				fall_anim(facing_dir)
+
+	# always apply gravity, many grounded/grabbing checks depend on this.
+	velocity.y += FALL_SPEED * delta
 
 	move_and_slide()
