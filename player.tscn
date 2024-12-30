@@ -1,10 +1,13 @@
-[gd_scene load_steps=53 format=3 uid="uid://bdtjj3x8a57vt"]
+[gd_scene load_steps=54 format=3 uid="uid://bdtjj3x8a57vt"]
 
 [ext_resource type="Script" path="res://player.gd" id="1_efbqu"]
 [ext_resource type="Texture2D" uid="uid://b348yg08u2cho" path="res://walking-animation-test.png" id="1_rp2e3"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_7tgua"]
 size = Vector2(6, 29)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_s22yj"]
+size = Vector2(18, 15)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_j23ru"]
 atlas = ExtResource("1_rp2e3")
@@ -471,9 +474,14 @@ script = ExtResource("1_efbqu")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 
-[node name="Body Collision" type="CollisionShape2D" parent="."]
+[node name="Standing Collision" type="CollisionShape2D" parent="."]
 position = Vector2(0, -14.5)
 shape = SubResource("RectangleShape2D_7tgua")
+
+[node name="Crouching Collision" type="CollisionShape2D" parent="."]
+position = Vector2(0, -7.5)
+shape = SubResource("RectangleShape2D_s22yj")
+disabled = true
 
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
 position = Vector2(0, -16)
