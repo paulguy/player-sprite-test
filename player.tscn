@@ -1,10 +1,42 @@
-[gd_scene load_steps=41 format=3 uid="uid://bdtjj3x8a57vt"]
+[gd_scene load_steps=53 format=3 uid="uid://bdtjj3x8a57vt"]
 
 [ext_resource type="Script" path="res://player.gd" id="1_efbqu"]
 [ext_resource type="Texture2D" uid="uid://b348yg08u2cho" path="res://walking-animation-test.png" id="1_rp2e3"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_7tgua"]
 size = Vector2(6, 29)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j23ru"]
+atlas = ExtResource("1_rp2e3")
+region = Rect2(80, 96, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_w5qr4"]
+atlas = ExtResource("1_rp2e3")
+region = Rect2(112, 96, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_apc1m"]
+atlas = ExtResource("1_rp2e3")
+region = Rect2(144, 96, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kdb0t"]
+atlas = ExtResource("1_rp2e3")
+region = Rect2(176, 96, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vf6uk"]
+atlas = ExtResource("1_rp2e3")
+region = Rect2(80, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_es44l"]
+atlas = ExtResource("1_rp2e3")
+region = Rect2(112, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ytcsk"]
+atlas = ExtResource("1_rp2e3")
+region = Rect2(144, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ao752"]
+atlas = ExtResource("1_rp2e3")
+region = Rect2(176, 64, 32, 32)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_nqiws"]
 atlas = ExtResource("1_rp2e3")
@@ -61,6 +93,22 @@ region = Rect2(64, 0, 16, 32)
 [sub_resource type="AtlasTexture" id="AtlasTexture_srxgf"]
 atlas = ExtResource("1_rp2e3")
 region = Rect2(0, 0, 16, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_13lvb"]
+atlas = ExtResource("1_rp2e3")
+region = Rect2(16, 96, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sp6vh"]
+atlas = ExtResource("1_rp2e3")
+region = Rect2(48, 96, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jvj6h"]
+atlas = ExtResource("1_rp2e3")
+region = Rect2(16, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q5mo1"]
+atlas = ExtResource("1_rp2e3")
+region = Rect2(48, 64, 32, 32)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_s87t8"]
 atlas = ExtResource("1_rp2e3")
@@ -148,6 +196,40 @@ region = Rect2(48, 32, 16, 32)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_wr4ns"]
 animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j23ru")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_w5qr4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_apc1m")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kdb0t")
+}],
+"loop": true,
+"name": &"Crawling L",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vf6uk")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_es44l")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ytcsk")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ao752")
+}],
+"loop": true,
+"name": &"Crawling R",
+"speed": 5.0
+}, {
 "frames": [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_nqiws")
@@ -248,6 +330,28 @@ animations = [{
 }],
 "loop": true,
 "name": &"Standing R",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_13lvb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sp6vh")
+}],
+"loop": false,
+"name": &"Start Crawling L",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jvj6h")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q5mo1")
+}],
+"loop": false,
+"name": &"Start Crawling R",
 "speed": 10.0
 }, {
 "frames": [{
@@ -374,7 +478,7 @@ shape = SubResource("RectangleShape2D_7tgua")
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
 position = Vector2(0, -16)
 sprite_frames = SubResource("SpriteFrames_wr4ns")
-animation = &"Crouch R"
+animation = &"Start Crawling L"
 
 [node name="Grab Collision" type="CollisionShape2D" parent="."]
 position = Vector2(3, -19)

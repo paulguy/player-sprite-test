@@ -1,7 +1,8 @@
 extends CharacterBody2D
 
 const SPEED : float = 150.0
-const FALL_AWAY_SPEED : float = 75.0
+const CRAWL_SPEED : float = 50.0
+const AIR_SPEED : float = 75.0
 const FALL_SPEED : float = 300.0
 const JUMP_POWER : float = 300.0
 const START_WALKING_FRAMES : int = 2
@@ -40,6 +41,10 @@ var falling_open_wall : bool = true
 var last_y : float = 0.0
 var do_movement : bool = true
 
+# sentinel Callable to disable turning
+func NO_TURN(_dir : int):
+	pass
+
 func set_facing_dir(dir : int):
 	facing_dir = dir
 	grab_coll.position.x = absf(grab_coll.position.x) * dir
@@ -49,11 +54,20 @@ func set_facing_dir(dir : int):
 
 func stand_anim(dir : int):
 	action = Action.STANDING
+	velocity.x = 0.0
 	air_dir = 0
 	if dir > 0:
 		sprite.play(&"Standing R")
 	else:
 		sprite.play(&"Standing L")
+
+func start_walk_anim(dir : int):
+	action = Action.START_WALKING
+	animation_done = false
+	if dir > 0:
+		sprite.play(&"Start Walking R")
+	else:
+		sprite.play(&"Start Walking L")
 
 func walk_anim(dir : int):
 	action = Action.WALKING
@@ -64,16 +78,9 @@ func walk_anim(dir : int):
 		sprite.play(&"Walking L")
 	sprite.set_frame_and_progress(START_WALKING_FRAMES, 0.0)
 
-func start_walk_anim(dir : int):
-	action = Action.START_WALKING
-	animation_done = false
-	if dir > 0:
-		sprite.play(&"Start Walking R")
-	else:
-		sprite.play(&"Start Walking L")
-
-func turn_anim(dir : int):
+func turning_anim(dir : int):
 	action = Action.TURNING
+	velocity.x = 0.0
 	animation_done = false
 	if dir > 0:
 		sprite.play(&"Turning")
@@ -82,6 +89,7 @@ func turn_anim(dir : int):
 
 func jump_anim(dir : int):
 	action = Action.START_JUMPING
+	velocity.x = 0.0
 	animation_done = false
 	if dir > 0:
 		sprite.play(&"Jumping R")
@@ -121,6 +129,7 @@ func start_crouch_anim(dir : int):
 
 func crouch_anim(dir : int):
 	action = Action.CROUCHING
+	velocity.x = 0.0
 	if dir > 0:
 		sprite.play(&"Crouch R")
 	else:
@@ -193,16 +202,30 @@ func stand_check(dir : int):
 		start_stand_anim(dir)
 	else:
 		# collision
+		body_coll.position = orig_coll_pos
+		body_coll.shape.size = orig_coll_size
 		if action == Action.LEDGE_CLIMB:
 			# crouch failed
-			# move player back and regrab
+			# move player back and try other things
 			position = orig_pos
-			body_coll.position = orig_coll_pos
-			body_coll.shape.size = orig_coll_size
-			grab_coll.disabled = false
-			grab_anim(dir)
-		# try transitioning to a crouch
-		crouch_check(dir)
+			# try transitioning to a crouch
+			crouch_check(dir)
+		# if everything else failed, don't stand up
+
+func start_crawl_anim(dir : int):
+	action = Action.START_CRAWLING
+	animation_done = false
+	if dir > 0:
+		sprite.play(&"Start Crawling R")
+	else:
+		sprite.play(&"Start Crawling L")
+
+func crawl_anim(dir : int):
+	action = Action.CRAWLING
+	if dir > 0:
+		sprite.play(&"Crawling R")
+	else:
+		sprite.play(&"Crawling L")
 
 func _on_sprite_animation_finished() -> void:
 	animation_done = true
@@ -212,17 +235,17 @@ func _ready():
 
 func transition_animation(grounded : bool,
 						 pressed_dir : int,
-						 can_turn : bool,
 						 can_drop : bool,
 						 next_anim : Callable,
-						 cancel_anim : Callable):
+						 cancel_anim : Callable,
+						 turn_anim : Callable):
 	if grounded:
 		if animation_done:
 			if pressed_dir != 0 and pressed_dir != intent_dir:
 				# pressed the opposite direction
-				if can_turn:
+				if turn_anim != NO_TURN:
 					intent_dir = pressed_dir
-					turn_anim(intent_dir)
+					turn_anim.call(intent_dir)
 				elif can_drop:
 					fall_anim(facing_dir)
 			else:
@@ -263,7 +286,6 @@ func _physics_process(delta : float):
 	if Input.is_action_pressed(&"jump"):
 		jumping = true
 
-	velocity.x = 0.0
 	match action:
 		Action.STANDING:
 			if grounded:
@@ -276,7 +298,7 @@ func _physics_process(delta : float):
 					if pressed_dir != facing_dir:
 						# pressed in opposite direction: turn
 						intent_dir = pressed_dir
-						turn_anim(intent_dir)
+						turning_anim(intent_dir)
 					else:
 						# pressed in same direction: walk
 						start_walk_anim(facing_dir)
@@ -286,15 +308,17 @@ func _physics_process(delta : float):
 		Action.TURNING:
 			transition_animation(grounded,
 								pressed_dir,
-								true, false,
+								true,
 								start_walk_anim,
-								stand_anim)
+								stand_anim,
+								NO_TURN)
 		Action.START_WALKING:
 			transition_animation(grounded,
 								pressed_dir,
-								true, false,
+								true,
 								walk_anim,
-								stand_anim)
+								stand_anim,
+								turning_anim)
 		Action.WALKING:
 			if grounded:
 				if jumping:
@@ -306,7 +330,7 @@ func _physics_process(delta : float):
 				elif pressed_dir != facing_dir:
 					# turn
 					intent_dir = pressed_dir
-					turn_anim(intent_dir)
+					turning_anim(intent_dir)
 				else:
 					# continue walking
 					velocity.x = SPEED * facing_dir
@@ -328,7 +352,7 @@ func _physics_process(delta : float):
 		Action.JUMPING:
 			if hit_wall:
 				air_dir = 0
-			velocity.x = FALL_AWAY_SPEED * air_dir
+			velocity.x = AIR_SPEED * air_dir
 			if velocity.y > 0.0:
 				# initializa the correct value at the peak
 				# raycasting is disabled at this point, so force the update
@@ -379,7 +403,7 @@ func _physics_process(delta : float):
 				else:
 					# open
 					falling_open_wall = true
-				velocity.x = FALL_AWAY_SPEED * air_dir
+				velocity.x = AIR_SPEED * air_dir
 				last_y = position.y
 		Action.GRABBING:
 			if grabbing:
@@ -407,21 +431,24 @@ func _physics_process(delta : float):
 		Action.LEDGE_CLIMB:
 			transition_animation(grabbing,
 								pressed_dir,
-								false, true,
+								false,
 								stand_check,
-								grab_anim)
+								grab_anim,
+								NO_TURN)
 		Action.START_STANDING:
 			transition_animation(grounded,
 								 pressed_dir,
-								 false, false,
+								 false,
 								 stand_anim,
-								 stand_anim)
+								 stand_anim,
+								 NO_TURN)
 		Action.START_CROUCHING:
 			transition_animation(grounded,
 								 pressed_dir,
-								 false, false,
+								 false,
 								 crouch_anim,
-								 crouch_anim)
+								 crouch_anim,
+								 NO_TURN)
 		Action.CROUCHING:
 			if grounded:
 				if Input.is_action_just_pressed(&"climb_up"):
@@ -431,10 +458,32 @@ func _physics_process(delta : float):
 						# pressed in opposite direction: turn
 						pass
 					else:
-						# pressed in same direction: crawl
-						pass
+						start_crawl_anim(facing_dir)
 			else:
 				# fall
+				fall_anim(facing_dir)
+		Action.START_CRAWLING:
+			transition_animation(grounded,
+								 pressed_dir,
+								 false,
+								 crawl_anim,
+								 crawl_anim,
+								 NO_TURN)
+		Action.CRAWLING:
+			if grounded:
+				if Input.is_action_just_pressed(&"climb_up"):
+					stand_check(facing_dir)
+				elif pressed_dir == 0:
+					# stop
+					crouch_anim(facing_dir)
+				else:
+					# continue walking
+					velocity.x = CRAWL_SPEED * facing_dir
+			else:
+				# fall
+				# restore standing shape
+				body_coll.position = standing_pos
+				body_coll.shape.size = standing_size
 				fall_anim(facing_dir)
 
 	# always apply gravity, many grounded/grabbing checks depend on this.
