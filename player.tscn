@@ -1,4 +1,4 @@
-[gd_scene load_steps=54 format=3 uid="uid://bdtjj3x8a57vt"]
+[gd_scene load_steps=62 format=3 uid="uid://bdtjj3x8a57vt"]
 
 [ext_resource type="Script" path="res://player.gd" id="1_efbqu"]
 [ext_resource type="Texture2D" uid="uid://b348yg08u2cho" path="res://walking-animation-test.png" id="1_rp2e3"]
@@ -8,6 +8,38 @@ size = Vector2(6, 29)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_s22yj"]
 size = Vector2(18, 15)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fxcrv"]
+atlas = ExtResource("1_rp2e3")
+region = Rect2(64, 128, 16, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5038y"]
+atlas = ExtResource("1_rp2e3")
+region = Rect2(80, 128, 16, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_r711l"]
+atlas = ExtResource("1_rp2e3")
+region = Rect2(96, 128, 16, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lge2n"]
+atlas = ExtResource("1_rp2e3")
+region = Rect2(112, 128, 16, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2uv2v"]
+atlas = ExtResource("1_rp2e3")
+region = Rect2(0, 128, 16, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5h5bf"]
+atlas = ExtResource("1_rp2e3")
+region = Rect2(16, 128, 16, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sjh5i"]
+atlas = ExtResource("1_rp2e3")
+region = Rect2(32, 128, 16, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jou5x"]
+atlas = ExtResource("1_rp2e3")
+region = Rect2(48, 128, 16, 32)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_j23ru"]
 atlas = ExtResource("1_rp2e3")
@@ -199,6 +231,40 @@ region = Rect2(48, 32, 16, 32)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_wr4ns"]
 animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fxcrv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5038y")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_r711l")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_lge2n")
+}],
+"loop": true,
+"name": &"Climbing L",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2uv2v")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5h5bf")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sjh5i")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jou5x")
+}],
+"loop": true,
+"name": &"Climbing R",
+"speed": 5.0
+}, {
 "frames": [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_j23ru")
@@ -486,7 +552,7 @@ disabled = true
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
 position = Vector2(0, -16)
 sprite_frames = SubResource("SpriteFrames_wr4ns")
-animation = &"Start Crawling L"
+animation = &"Grabbing R"
 
 [node name="Grab Collision" type="CollisionShape2D" parent="."]
 position = Vector2(3, -19)
@@ -495,9 +561,14 @@ disabled = true
 one_way_collision = true
 one_way_collision_margin = 0.0
 
-[node name="Ray" type="RayCast2D" parent="."]
+[node name="Grab Ray" type="RayCast2D" parent="."]
 position = Vector2(3, -19)
 enabled = false
 target_position = Vector2(5, 0)
+
+[node name="Ledge Ray" type="RayCast2D" parent="."]
+position = Vector2(3, 0)
+enabled = false
+target_position = Vector2(0, 1)
 
 [connection signal="animation_finished" from="Sprite" to="." method="_on_sprite_animation_finished"]

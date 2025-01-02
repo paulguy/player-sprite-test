@@ -1,17 +1,20 @@
 extends CharacterBody2D
 
 const SPEED : float = 150.0
+const INCHING_SPEED : float = 20.0
 const CRAWL_SPEED : float = 50.0
 const AIR_SPEED : float = 200.0
 const FALL_SPEED : float = 300.0
 const JUMP_POWER : float = 300.0
 const START_WALKING_FRAMES : int = 2
+const GRAB_AFTER_FALLING : float = 1.0
 
 @onready var sprite : AnimatedSprite2D = $"Sprite"
 @onready var standing_coll : CollisionShape2D = $"Standing Collision"
 @onready var crouching_coll : CollisionShape2D = $"Crouching Collision"
 @onready var grab_coll : CollisionShape2D = $"Grab Collision"
-@onready var ray : RayCast2D = $"Ray"
+@onready var grab_ray : RayCast2D = $"Grab Ray"
+@onready var ledge_ray : RayCast2D = $"Ledge Ray"
 
 enum Action {
 	STANDING,
@@ -27,7 +30,12 @@ enum Action {
 	START_CROUCHING,
 	CROUCHING,
 	START_CRAWLING,
-	CRAWLING
+	CRAWLING,
+	# TODO: climb specially marked walls from standing
+	#       automatically ledge grab when crawling instead of crawling off an edge
+	#       climb down from a ledge grab on specially marked walls
+	CLIMBING
+	# TODO: Swimming?
 }
 
 var action : Action = Action.STANDING
@@ -37,7 +45,7 @@ var air_dir : int = 0
 var animation_done : bool = true
 var falling_open_wall : bool = true
 var last_y : float = 0.0
-var do_movement : bool = true
+var fall_dist : float = 0.0
 
 # sentinel Callable to disable turning
 func NO_TURN(_dir : int):
@@ -52,11 +60,13 @@ func standing_collision():
 	crouching_coll.disabled = true
 
 func set_facing_dir(dir : int):
+	intent_dir = dir
 	facing_dir = dir
 	grab_coll.position.x = absf(grab_coll.position.x) * dir
 	grab_coll.shape.b.x = absf(grab_coll.shape.b.x) * dir
-	ray.position = grab_coll.position
-	ray.target_position.x = grab_coll.shape.b.x
+	grab_ray.position = grab_coll.position
+	grab_ray.target_position.x = grab_coll.shape.b.x
+	ledge_ray.position.x = absf(ledge_ray.position.x) * dir
 
 func stand_anim(dir : int):
 	action = Action.STANDING
@@ -104,9 +114,19 @@ func jump_anim(dir : int):
 
 func fall_anim(dir : int):
 	action = Action.FALLING
-	ray.enabled = true
 	# could be falling from crawling
 	standing_collision()
+	# initializa the correct value at the peak
+	# raycasting is disabled at this point, so force the update
+	grab_ray.force_raycast_update()
+	if grab_ray.is_colliding():
+		# blocked
+		falling_open_wall = false
+	else:
+		# open
+		falling_open_wall = true
+	last_y = position.y
+	fall_dist = 0.0
 	if dir > 0:
 		sprite.play(&"Falling R")
 	else:
@@ -114,6 +134,7 @@ func fall_anim(dir : int):
 
 func grab_anim(dir : int):
 	action = Action.GRABBING
+	grab_coll.disabled = false
 	if dir > 0:
 		sprite.play(&"Grabbing R")
 	else:
@@ -151,7 +172,7 @@ func crouch_check(dir : int):
 	var orig_pos : Vector2 = position
 	if action == Action.LEDGE_CLIMB:
 		# try placing self in new position for climbing up
-		position += ray.position + ray.target_position
+		position += grab_ray.position + grab_ray.target_position
 	crouching_collision()
 	# check collision at the new location
 	# do it twice because the player will be pushed away from walls the first time
@@ -174,7 +195,6 @@ func crouch_check(dir : int):
 		standing_collision()
 		position = orig_pos
 		if action == Action.LEDGE_CLIMB:
-			grab_coll.disabled = false
 			grab_anim(dir)
 		# don't change anim/action
 
@@ -193,7 +213,7 @@ func stand_check(dir : int):
 	if action == Action.LEDGE_CLIMB:
 		# try placing self in new position
 		orig_pos = position
-		position += ray.position + ray.target_position
+		position += grab_ray.position + grab_ray.target_position
 	standing_collision()
 	# check collision at the new location
 	var coll : KinematicCollision2D = move_and_collide(Vector2.ZERO)
@@ -295,7 +315,22 @@ func _physics_process(delta : float):
 					# jump
 					jump_anim(facing_dir)
 				elif Input.is_action_just_pressed(&"crouch"):
-					crouch_check(facing_dir)
+					ledge_ray.force_raycast_update()
+					if not ledge_ray.is_colliding():
+						# hanging off an edge, go in to a ledge grab
+						# move the player to somewhere roughly over the ledge
+						position.x += standing_coll.shape.size.x * facing_dir
+						# do this after so the player is moved in their facing position
+						set_facing_dir(-facing_dir)
+						# do this first to enable collision
+						grab_anim(facing_dir)
+						# move the player against the ledge
+						# in 2 steps to make sure the player is as close as
+						# possible on both axes so it looks visually correct
+						move_and_collide(Vector2(0.0, -grab_ray.position.y))
+						move_and_collide(Vector2(grab_coll.shape.b.x, 0.0))
+					else:
+						crouch_check(facing_dir)
 				elif pressed_dir != 0:
 					if pressed_dir != facing_dir:
 						# pressed in opposite direction: turn
@@ -315,6 +350,7 @@ func _physics_process(delta : float):
 								stand_anim,
 								NO_TURN)
 		Action.START_WALKING:
+			velocity.x = INCHING_SPEED * facing_dir
 			transition_animation(grounded,
 								pressed_dir,
 								true,
@@ -356,16 +392,6 @@ func _physics_process(delta : float):
 				air_dir = 0
 			velocity.x = AIR_SPEED * air_dir
 			if velocity.y > 0.0:
-				# initializa the correct value at the peak
-				# raycasting is disabled at this point, so force the update
-				ray.force_raycast_update()
-				if ray.is_colliding():
-					# blocked
-					falling_open_wall = false
-				else:
-					# open
-					falling_open_wall = true
-				last_y = position.y
 				fall_anim(facing_dir)
 		Action.FALLING:
 			if hit_wall:
@@ -375,32 +401,20 @@ func _physics_process(delta : float):
 				stand_anim(facing_dir)
 			else:
 				# falling
-				#ray.force_raycast_update()
-				if ray.is_colliding():
+				grab_ray.force_raycast_update()
+				if grab_ray.is_colliding():
 					# blocked
-					if falling_open_wall:
+					# prevent regrabbing the same ledge
+					if falling_open_wall and fall_dist > GRAB_AFTER_FALLING:
 						# transition from open to blocked
 						# grab
-
-						# Find where on the ground the player hit
-						var orig_pos : Vector2 = ray.position
-						var orig_target : Vector2 = ray.target_position
-						# search starting from where the player fell from to here
-						# at the "hand" position
-						ray.position = orig_pos + Vector2(orig_target.x, last_y - position.y)
-						ray.target_position = Vector2(0.0, position.y - last_y)
-						ray.force_raycast_update()
-						if ray.is_colliding():
-							# move the player to the found position relative to the hand position
-							var collision_pos : Vector2 = ray.get_collision_point()
-							position = collision_pos - (orig_pos + orig_target)
-
-							# place the collider to keep the player in place
-							grab_coll.disabled = false
-							grab_anim(facing_dir)
-						# restore the ray
-						ray.position = orig_pos
-						ray.target_position = orig_target
+						grab_anim(facing_dir)
+						# move the player against the ledge
+						# in 2 steps to make sure the player is as close as
+						# possible on both axes so it looks visually correct
+						position.y = last_y
+						move_and_collide(Vector2(0.0, position.y - last_y))
+						move_and_collide(Vector2(grab_coll.shape.b.x, 0.0))
 					falling_open_wall = false
 				else:
 					# open
@@ -416,8 +430,7 @@ func _physics_process(delta : float):
 					# start climbing up
 					ledge_climb_anim(facing_dir)
 				elif (facing_dir > 0 and Input.is_action_just_pressed(&"move_left")) or \
-					 (facing_dir < 0 and Input.is_action_just_pressed(&"move_right")) or \
-					 Input.is_action_just_pressed(&"jump"):
+					 (facing_dir < 0 and Input.is_action_just_pressed(&"move_right")):
 					# pressing away from ledge
 					# let go
 					fall_anim(facing_dir)
@@ -489,4 +502,7 @@ func _physics_process(delta : float):
 	# always apply gravity, many grounded/grabbing checks depend on this.
 	velocity.y += FALL_SPEED * delta
 
+	var dist : float = position.y
 	move_and_slide()
+	dist = position.y - dist
+	fall_dist += dist
