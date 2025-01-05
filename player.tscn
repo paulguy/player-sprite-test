@@ -1,4 +1,4 @@
-[gd_scene load_steps=62 format=3 uid="uid://bdtjj3x8a57vt"]
+[gd_scene load_steps=64 format=3 uid="uid://bdtjj3x8a57vt"]
 
 [ext_resource type="Script" path="res://player.gd" id="1_efbqu"]
 [ext_resource type="Texture2D" uid="uid://b348yg08u2cho" path="res://walking-animation-test.png" id="1_rp2e3"]
@@ -80,6 +80,14 @@ region = Rect2(16, 96, 32, 32)
 [sub_resource type="AtlasTexture" id="AtlasTexture_fm7u8"]
 atlas = ExtResource("1_rp2e3")
 region = Rect2(16, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_a5qpe"]
+atlas = ExtResource("1_rp2e3")
+region = Rect2(0, 64, 16, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_waoo4"]
+atlas = ExtResource("1_rp2e3")
+region = Rect2(0, 96, 16, 32)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_mg0ej"]
 atlas = ExtResource("1_rp2e3")
@@ -313,6 +321,22 @@ animations = [{
 }],
 "loop": false,
 "name": &"Crouch R",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_a5qpe")
+}],
+"loop": true,
+"name": &"Down To Ledge L",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_waoo4")
+}],
+"loop": true,
+"name": &"Down To Ledge R",
 "speed": 5.0
 }, {
 "frames": [{
@@ -552,7 +576,7 @@ disabled = true
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
 position = Vector2(0, -16)
 sprite_frames = SubResource("SpriteFrames_wr4ns")
-animation = &"Grabbing R"
+animation = &"Climbing R"
 
 [node name="Grab Collision" type="CollisionShape2D" parent="."]
 position = Vector2(3, -19)
