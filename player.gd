@@ -454,7 +454,6 @@ func _physics_process(delta : float):
 			if velocity.y > 0.0:
 				fall_anim(facing_dir)
 		Action.FALLING:
-			# TODO: rewrite to only grab if falling vertically
 			if hit_wall:
 				air_dir = 0
 			if grounded:
@@ -466,7 +465,12 @@ func _physics_process(delta : float):
 				if grab_ray.is_colliding():
 					# blocked
 					# prevent regrabbing the same ledge
-					if falling_open_wall and fall_dist >= GRAB_AFTER_FALLING:
+					# only grab if falling straight down because it's the only
+					# way it's unambiguous that the player has fallen past a ledge
+					# rather than flew towards a wall
+					if falling_open_wall and \
+					   fall_dist >= GRAB_AFTER_FALLING and \
+					   velocity.x == 0.0:
 						# transition from open to blocked
 						# grab
 						grab_anim(facing_dir)
@@ -602,11 +606,15 @@ func _physics_process(delta : float):
 				else:
 					velocity.y = CLIMB_SPEED * pressed_vert
 			else:
+				# enables grab collider
+				grab_anim(facing_dir)
+				# move player against floor
+				move_and_collide(Vector2(0.0, -velocity.y))
+				# assure player collides with the ground right away to not fall
+				velocity = Vector2.ZERO
+				do_gravity = true
+				# restore sprite position
 				sprite.position.x = 0.0
-				fall_anim(facing_dir)
-				# grab immediately
-				velocity.y = 0.0
-				fall_dist = GRAB_AFTER_FALLING
 		Action.DOWN_TO_LEDGE:
 			transition_animation(grounded,
 								 pressed_horiz,
