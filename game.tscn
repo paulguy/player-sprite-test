@@ -1,20 +1,38 @@
-[gd_scene load_steps=2 format=3 uid="uid://da47jofjc8nb6"]
+[gd_scene load_steps=4 format=3 uid="uid://da47jofjc8nb6"]
 
 [ext_resource type="PackedScene" uid="uid://bdtjj3x8a57vt" path="res://player.tscn" id="1_dd3kg"]
+[ext_resource type="Script" path="res://water_area.gd" id="2_tux0u"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_8m5dn"]
+size = Vector2(237, 119)
 
 [node name="Game" type="Node2D"]
 
 [node name="Player" parent="." instance=ExtResource("1_dd3kg")]
 position = Vector2(38, 35)
 
+[node name="WaterArea" type="Area2D" parent="."]
+script = ExtResource("2_tux0u")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WaterArea"]
+visible = false
+position = Vector2(-301, 67)
+shape = SubResource("RectangleShape2D_8m5dn")
+
+[node name="Polygon2D" type="Polygon2D" parent="WaterArea"]
+position = Vector2(0, -1.06015)
+scale = Vector2(1, 1.00752)
+color = Color(0, 0, 1, 0.388235)
+polygon = PackedVector2Array(-430, 9, -160, 8.99254, -152, 141, -427, 130)
+
 [node name="StaticBody2D" type="StaticBody2D" parent="."]
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D"]
 build_mode = 1
-polygon = PackedVector2Array(3, 63, 158, 63, 158, -1, 240, 1, 240, 129, 268, 130, 267, 107, 294, 105, 294, 83, 327, 86, 326, 58, 435, 57, 444, 200, -186, 184, -185, -2, 3, -2)
+polygon = PackedVector2Array(3, 63, 158, 63, 158, -1, 240, 1, 240, 129, 268, 130, 267, 107, 294, 105, 294, 83, 327, 86, 326, 58, 435, 57, 444, 200, -186, 184, -500, 185, -498, -132, -408, -134, -403, 106, -307, 107, -185, -2, 3, -2)
 
 [node name="Polygon2D" type="Polygon2D" parent="StaticBody2D"]
-polygon = PackedVector2Array(3, 63, 158, 63, 158, -1, 240, 1, 240, 129, 268, 130, 267, 107, 294, 105, 294, 83, 327, 86, 326, 58, 435, 57, 444, 200, -186, 184, -185, -2, 3, -2)
+polygon = PackedVector2Array(3, 63, 158, 63, 158, -1, 240, 1, 240, 129, 268, 130, 267, 107, 294, 105, 294, 83, 327, 86, 326, 58, 435, 57, 444, 200, -186, 184, -500, 185, -498, -132, -408, -134, -403, 106, -307, 107, -185, -2, 3, -2)
 
 [node name="StaticBody2D2" type="StaticBody2D" parent="."]
 
@@ -34,3 +52,6 @@ polygon = PackedVector2Array(158, -61, 240, -61, 240, -126, 158, -126)
 
 [node name="Polygon2D" type="Polygon2D" parent="StaticBody2D3"]
 polygon = PackedVector2Array(158, -61, 240, -61, 240, -126, 158, -126)
+
+[connection signal="body_entered" from="WaterArea" to="WaterArea" method="_on_body_entered"]
+[connection signal="body_exited" from="WaterArea" to="WaterArea" method="_on_body_exited"]
