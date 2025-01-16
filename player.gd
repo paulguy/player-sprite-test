@@ -4,6 +4,7 @@ class_name Player
 const SPEED : float = 150.0
 const INCHING_SPEED : float = 20.0
 const CRAWL_SPEED : float = 50.0
+const INCHING_CRAWLING_SPEED : float = 10.0
 const AIR_SPEED : float = 200.0
 const FALL_SPEED : float = 300.0
 const JUMP_POWER : float = 300.0
@@ -38,8 +39,6 @@ enum Action {
 	CROUCHING,
 	START_CRAWLING,
 	CRAWLING,
-	# TODO: make climbing only possible with some walls
-	#       automatically ledge grab when crawling instead of crawling off an edge
 	CLIMBING_IDLE,
 	CLIMBING,
 	DOWN_TO_LEDGE,
@@ -57,12 +56,19 @@ var fall_dist : float = 0.0
 var gravity : float = FALL_SPEED
 var in_water : bool = false
 var swim_timer : float = 0.0
+var can_climb : bool = false
 
 func entered_water():
 	in_water = true
 
 func left_water():
 	in_water = false
+
+func entered_climbable():
+	can_climb = true
+
+func left_climbable():
+	can_climb = false
 
 # sentinel Callable to disable turning
 func NO_TURN(_dir : float):
@@ -411,7 +417,7 @@ func _physics_process(delta : float):
 						swim_anim(facing_dir)
 					else:
 						jump_anim(facing_dir)
-				elif pressed_vert < 0.0:
+				elif can_climb and pressed_vert < 0.0:
 					# try to climb
 					grab_ray.force_raycast_update()
 					if grab_ray.is_colliding():
@@ -541,7 +547,7 @@ func _physics_process(delta : float):
 					# let go
 					fall_anim(facing_dir)
 					grab_coll.disabled = true
-				elif pressed_vert > 0.0:
+				elif can_climb and pressed_vert > 0.0:
 					# pressed down
 					# transition to climbing down the wall
 					climb_anim(facing_dir)
@@ -595,6 +601,7 @@ func _physics_process(delta : float):
 				# fall
 				fall_anim(facing_dir)
 		Action.START_CRAWLING:
+			velocity.x = INCHING_CRAWLING_SPEED * facing_dir
 			transition_animation(grounded,
 								 pressed_horiz,
 								 pressed_vert,
@@ -604,15 +611,21 @@ func _physics_process(delta : float):
 								 NO_TURN)
 		Action.CRAWLING:
 			if grounded:
-				if Input.is_action_just_pressed(&"climb_up"):
-					velocity.x = 0.0
-					stand_check(facing_dir)
-				elif pressed_horiz == 0.0:
-					# stop
-					crouch_anim(facing_dir)
+				ledge_ray.force_raycast_update()
+				if not ledge_ray.is_colliding():
+					# TODO: Fix usually not grabbing
+					standing_collision()
+					down_to_ledge(facing_dir)
 				else:
-					# continue walking
-					velocity.x = CRAWL_SPEED * facing_dir
+					if Input.is_action_just_pressed(&"climb_up"):
+						velocity.x = 0.0
+						stand_check(facing_dir)
+					elif pressed_horiz == 0.0:
+						# stop
+						crouch_anim(facing_dir)
+					else:
+						# continue walking
+						velocity.x = CRAWL_SPEED * facing_dir
 			else:
 				# fall
 				velocity.x = 0.0
@@ -627,7 +640,7 @@ func _physics_process(delta : float):
 					sprite.position.x = 0.0
 					fall_anim(facing_dir)
 				else:
-					if pressed_vert != 0.0:
+					if can_climb and pressed_vert != 0.0:
 						climb_anim(facing_dir)
 			else:
 				sprite.position.x = 0.0
@@ -640,7 +653,7 @@ func _physics_process(delta : float):
 				if pressed_vert > 0.0 and is_on_floor():
 					sprite.position.x = 0.0
 					stand_anim(facing_dir)
-				elif pressed_vert == 0.0:
+				elif can_climb and pressed_vert == 0.0:
 					velocity.y = 0.0
 					climb_idle_anim(facing_dir)
 				else:
@@ -668,7 +681,7 @@ func _physics_process(delta : float):
 				# if the player left the water, change actions
 				if grounded:
 					walk_anim(facing_dir)
-				elif velocity.y < 0.0:
+				elif can_climb and velocity.y < 0.0:
 					grab_ray.force_raycast_update()
 					if grab_ray.is_colliding():
 						# grab wall

@@ -1,10 +1,17 @@
-[gd_scene load_steps=4 format=3 uid="uid://da47jofjc8nb6"]
+[gd_scene load_steps=7 format=3 uid="uid://da47jofjc8nb6"]
 
 [ext_resource type="PackedScene" uid="uid://bdtjj3x8a57vt" path="res://player.tscn" id="1_dd3kg"]
 [ext_resource type="Script" path="res://water_area.gd" id="2_tux0u"]
+[ext_resource type="Script" path="res://climb_area.gd" id="3_2dehf"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_8m5dn"]
 size = Vector2(237, 119)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_56r3u"]
+size = Vector2(20, 200)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_4xc8y"]
+size = Vector2(20, 300)
 
 [node name="Game" type="Node2D"]
 
@@ -53,5 +60,42 @@ polygon = PackedVector2Array(158, -61, 240, -61, 240, -126, 158, -126)
 [node name="Polygon2D" type="Polygon2D" parent="StaticBody2D3"]
 polygon = PackedVector2Array(158, -61, 240, -61, 240, -126, 158, -126)
 
+[node name="Climbable 1" type="Area2D" parent="."]
+position = Vector2(1, 2)
+script = ExtResource("3_2dehf")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Climbable 1"]
+shape = SubResource("RectangleShape2D_56r3u")
+
+[node name="Climbable 2" type="Area2D" parent="."]
+position = Vector2(-411, -47)
+script = ExtResource("3_2dehf")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Climbable 2"]
+shape = SubResource("RectangleShape2D_56r3u")
+
+[node name="Climbable 3" type="Area2D" parent="."]
+position = Vector2(159, -31)
+script = ExtResource("3_2dehf")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Climbable 3"]
+shape = SubResource("RectangleShape2D_56r3u")
+
+[node name="Climbable 4" type="Area2D" parent="."]
+position = Vector2(243, 1)
+script = ExtResource("3_2dehf")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Climbable 4"]
+position = Vector2(-4, 0)
+shape = SubResource("RectangleShape2D_4xc8y")
+
 [connection signal="body_entered" from="WaterArea" to="WaterArea" method="_on_body_entered"]
 [connection signal="body_exited" from="WaterArea" to="WaterArea" method="_on_body_exited"]
+[connection signal="body_entered" from="Climbable 1" to="Climbable 1" method="_on_body_entered"]
+[connection signal="body_exited" from="Climbable 1" to="Climbable 1" method="_on_body_exited"]
+[connection signal="body_entered" from="Climbable 2" to="Climbable 2" method="_on_body_entered"]
+[connection signal="body_exited" from="Climbable 2" to="Climbable 2" method="_on_body_exited"]
+[connection signal="body_entered" from="Climbable 3" to="Climbable 3" method="_on_body_entered"]
+[connection signal="body_exited" from="Climbable 3" to="Climbable 3" method="_on_body_exited"]
+[connection signal="body_entered" from="Climbable 4" to="Climbable 4" method="_on_body_entered"]
+[connection signal="body_exited" from="Climbable 4" to="Climbable 4" method="_on_body_exited"]

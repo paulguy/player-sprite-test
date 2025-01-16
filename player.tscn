@@ -668,7 +668,7 @@ disabled = true
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
 position = Vector2(0, -16)
 sprite_frames = SubResource("SpriteFrames_wr4ns")
-animation = &"Swimming Turning"
+animation = &"Down To Ledge R"
 
 [node name="Grab Collision" type="CollisionShape2D" parent="."]
 position = Vector2(3, -19)
