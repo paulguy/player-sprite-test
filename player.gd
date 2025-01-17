@@ -57,6 +57,7 @@ var gravity : float = FALL_SPEED
 var in_water : bool = false
 var swim_timer : float = 0.0
 var can_climb : bool = false
+var last_climb_dir : float = 0.0
 
 func entered_water():
 	in_water = true
@@ -243,14 +244,14 @@ func start_stand_anim(dir : float):
 func stand_check(dir : float):
 	# disable grab collider
 	grab_coll.disabled = true
-	var orig_pos : Vector2
+	var pos : Vector2
 	if action == Action.LEDGE_CLIMB:
 		# try placing self in new position
-		orig_pos = position
+		pos = position
 		position += grab_ray.position + grab_ray.target_position
 	standing_collision()
 	# check collision at the new location
-	var coll : KinematicCollision2D = move_and_collide(Vector2.ZERO)
+	var coll : KinematicCollision2D = move_and_collide(Vector2.ZERO, true)
 	if coll == null:
 		# no collision
 		# transition to standing
@@ -261,7 +262,7 @@ func stand_check(dir : float):
 		if action == Action.LEDGE_CLIMB:
 			# crouch failed
 			# move player back and try other things
-			position = orig_pos
+			position = pos
 			# try transitioning to a crouch
 			crouch_check(dir)
 		# if everything else failed, don't stand up
@@ -314,6 +315,12 @@ func down_to_ledge_anim(dir : float):
 		sprite.play(&"Down To Ledge L")
 
 func down_to_ledge(dir : float):
+	# store original value
+	var pos : Vector2 = position
+	var vel : Vector2 = velocity
+	var orig_action : Action = action
+	# if the player was crawling, their collision needs to be standing
+	standing_collision()
 	# hanging off an edge, go in to a ledge grab
 	# move the player to somewhere roughly over the ledge
 	position.x += standing_coll.shape.size.x * dir
@@ -325,8 +332,26 @@ func down_to_ledge(dir : float):
 	# move the player against the ledge
 	# in 2 steps to make sure the player is as close as
 	# possible on both axes so it looks visually correct
-	move_and_collide(Vector2(0.0, -grab_ray.position.y))
+	var coll = move_and_collide(Vector2(0.0, -grab_ray.position.y))
 	move_and_collide(Vector2(grab_coll.shape.b.x, 0.0))
+	# don't slide off
+	velocity.x = 0.0
+	if coll != null:
+		if coll.get_local_shape() == standing_coll:
+			# still standing on the player's feet, grab failed
+			# reset position and velocity and facing direction
+			position = pos
+			velocity = vel
+			set_facing_dir(dir)
+			# restore last action
+			if orig_action == Action.START_CRAWLING or \
+			   orig_action == Action.CRAWLING:
+				# was crawling
+				crouching_collision()
+				crawl_anim(facing_dir)
+			else:
+				# was climbing down from standing
+				stand_anim(facing_dir)
 
 func swim_anim(dir : float):
 	action = Action.SWIMMING
@@ -601,20 +626,27 @@ func _physics_process(delta : float):
 				# fall
 				fall_anim(facing_dir)
 		Action.START_CRAWLING:
-			velocity.x = INCHING_CRAWLING_SPEED * facing_dir
-			transition_animation(grounded,
-								 pressed_horiz,
-								 pressed_vert,
-								 false, false,
-								 crawl_anim,
-								 crawl_anim,
-								 NO_TURN)
+			var continue_transition : bool = true
+			if grounded:
+				ledge_ray.force_raycast_update()
+				if not ledge_ray.is_colliding():
+					down_to_ledge(facing_dir)
+					continue_transition = false
+					# player has already transitioned to a new action so don't
+					# continue the transition
+			if continue_transition:
+				velocity.x = INCHING_CRAWLING_SPEED * facing_dir
+				transition_animation(grounded,
+									 pressed_horiz,
+									 pressed_vert,
+									 false, false,
+									 crawl_anim,
+									 crawl_anim,
+									 NO_TURN)
 		Action.CRAWLING:
 			if grounded:
 				ledge_ray.force_raycast_update()
 				if not ledge_ray.is_colliding():
-					# TODO: Fix usually not grabbing
-					standing_collision()
 					down_to_ledge(facing_dir)
 				else:
 					if Input.is_action_just_pressed(&"climb_up"):
@@ -637,12 +669,16 @@ func _physics_process(delta : float):
 				   (facing_dir < 0.0 and Input.is_action_just_pressed(&"move_right")):
 					# pressing away from wall
 					# let go
+					last_climb_dir = 0.0
 					sprite.position.x = 0.0
 					fall_anim(facing_dir)
 				else:
-					if can_climb and pressed_vert != 0.0:
+					if (can_climb or
+						(not can_climb and pressed_vert != last_climb_dir)) and \
+						pressed_vert != 0.0:
 						climb_anim(facing_dir)
 			else:
+				last_climb_dir = 0.0
 				sprite.position.x = 0.0
 				fall_anim(facing_dir)
 				# grab immediately
@@ -650,24 +686,46 @@ func _physics_process(delta : float):
 		Action.CLIMBING:
 			grab_ray.force_raycast_update()
 			if grab_ray.is_colliding():
+				# make sure player stays against the wall
+				move_and_collide(Vector2(grab_ray.target_position.x, 0.0))
 				if pressed_vert > 0.0 and is_on_floor():
+					last_climb_dir = 0.0
 					sprite.position.x = 0.0
+					enable_gravity()
 					stand_anim(facing_dir)
 				elif can_climb and pressed_vert == 0.0:
 					velocity.y = 0.0
 					climb_idle_anim(facing_dir)
 				else:
-					velocity.y = CLIMB_SPEED * pressed_vert
+					# only allow moving if the surface is climbable or if
+					# climbing in the opposite direction the player climbed out of
+					# the climbable area
+					velocity.y = 0.0
+					if can_climb or \
+					   (not can_climb and pressed_vert != last_climb_dir):
+						velocity.y = CLIMB_SPEED * pressed_vert
+						if can_climb:
+							last_climb_dir = pressed_vert
+					else:
+						climb_idle_anim(facing_dir)
 			else:
-				# enables grab collider
-				grab_anim(facing_dir)
-				# move player against floor
-				move_and_collide(Vector2(0.0, -velocity.y))
-				# assure player collides with the ground right away to not fall
-				velocity = Vector2.ZERO
+				# player is no longer facing a wall
+				last_climb_dir = 0.0
+				# make sure gravity is reenabled
 				enable_gravity()
 				# restore sprite position
 				sprite.position.x = 0.0
+				# enables grab collider
+				grab_anim(facing_dir)
+				# move player against edge floor
+				var coll : KinematicCollision2D = move_and_collide(Vector2(0.0, -velocity.y))
+				if coll == null:
+					# hit nothing
+					# no ledge, just fall
+					fall_anim(facing_dir)
+				else:
+					# assure player collides with the ground right away to not fall
+					velocity = Vector2.ZERO
 		Action.DOWN_TO_LEDGE:
 			transition_animation(grounded,
 								 pressed_horiz,
@@ -681,9 +739,10 @@ func _physics_process(delta : float):
 				# if the player left the water, change actions
 				if grounded:
 					walk_anim(facing_dir)
-				elif can_climb and velocity.y < 0.0:
-					grab_ray.force_raycast_update()
-					if grab_ray.is_colliding():
+				elif velocity.y < 0.0:
+					if can_climb:
+						grab_ray.force_raycast_update()
+					if can_climb and grab_ray.is_colliding():
 						# grab wall
 						# move against wall
 						velocity.y = 0.0
@@ -727,13 +786,19 @@ func _physics_process(delta : float):
 	velocity.y += gravity * delta
 
 	if in_water:
-		if not grounded and not grabbing and action != Action.SWIMMING:
+		if not grounded and \
+		   not grabbing and \
+		   action != Action.CLIMBING and \
+		   action != Action.CLIMBING_IDLE and \
+		   action != Action.SWIMMING:
 			# if the player has transitioned to being in water without
 			# being transitioned to the swimming state, transition to the swimming
 			# state.  Like falling or jumping in to water.
 			# allow normal actions to work underwater though.
-			swim_anim(facing_dir)
 			enable_gravity()
+			# could be falling
+			grab_coll.disabled = true
+			swim_anim(facing_dir)
 		velocity *= WATER_DRAG
 
 	var dist : float = position.y
