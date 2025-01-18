@@ -1,13 +1,14 @@
 extends CharacterBody2D
 class_name Player
 
-const SPEED : float = 150.0
+const SPEED : float = 80.0
 const INCHING_SPEED : float = 20.0
 const CRAWL_SPEED : float = 50.0
 const INCHING_CRAWLING_SPEED : float = 10.0
-const AIR_SPEED : float = 200.0
+const AIR_SPEED : float = 60.0
+const INCHING_AIR_SPEED : float = 10.0
 const FALL_SPEED : float = 300.0
-const JUMP_POWER : float = 300.0
+const JUMP_POWER : float = 130.0
 const CLIMB_SPEED : float = 50.0
 const START_WALKING_FRAMES : int = 2
 const SPRITE_WIDTH : float = 16.0
@@ -520,7 +521,7 @@ func _physics_process(delta : float):
 		Action.JUMPING:
 			if hit_wall:
 				air_velocity = 0.0
-			velocity.x = air_velocity
+			velocity.x = air_velocity + (INCHING_AIR_SPEED * pressed_horiz)
 			if velocity.y > 0.0:
 				fall_anim(facing_dir)
 		Action.FALLING:
@@ -555,7 +556,7 @@ func _physics_process(delta : float):
 				else:
 					# open
 					falling_open_wall = true
-				velocity.x = air_velocity
+				velocity.x = air_velocity + (INCHING_AIR_SPEED * pressed_horiz)
 				last_y = position.y
 		Action.GRABBING:
 			if grabbing:
