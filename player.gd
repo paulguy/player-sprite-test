@@ -55,22 +55,22 @@ var falling_open_wall : bool = true
 var last_y : float = 0.0
 var fall_dist : float = 0.0
 var gravity : float = FALL_SPEED
-var in_water : bool = false
+var in_water : int = 0
 var swim_timer : float = 0.0
-var can_climb : bool = false
+var can_climb : int = 0
 var last_climb_dir : float = 0.0
 
 func entered_water():
-	in_water = true
+	in_water += 1
 
 func left_water():
-	in_water = false
+	in_water -= 1
 
 func entered_climbable():
-	can_climb = true
+	can_climb += 1
 
 func left_climbable():
-	can_climb = false
+	can_climb -= 1
 
 # sentinel Callable to disable turning
 func NO_TURN(_dir : float):
@@ -85,7 +85,7 @@ func standing_collision():
 	crouching_coll.disabled = true
 
 func enable_gravity():
-	if in_water:
+	if in_water > 0:
 		gravity = WATER_FALL_SPEED
 	else:
 		gravity = FALL_SPEED
@@ -438,12 +438,12 @@ func _physics_process(delta : float):
 			if grounded:
 				if jumping:
 					# jump/swim
-					if in_water:
+					if in_water > 0:
 						swim()
 						swim_anim(facing_dir)
 					else:
 						jump_anim(facing_dir)
-				elif can_climb and pressed_vert < 0.0:
+				elif can_climb > 0 and pressed_vert < 0.0:
 					# try to climb
 					grab_ray.force_raycast_update()
 					if grab_ray.is_colliding():
@@ -488,7 +488,7 @@ func _physics_process(delta : float):
 			if grounded:
 				if jumping:
 					# jump/swim
-					if in_water:
+					if in_water > 0:
 						swim()
 						swim_anim(facing_dir)
 					else:
@@ -573,7 +573,7 @@ func _physics_process(delta : float):
 					# let go
 					fall_anim(facing_dir)
 					grab_coll.disabled = true
-				elif can_climb and pressed_vert > 0.0:
+				elif can_climb > 0 and pressed_vert > 0.0:
 					# pressed down
 					# transition to climbing down the wall
 					climb_anim(facing_dir)
@@ -674,8 +674,8 @@ func _physics_process(delta : float):
 					sprite.position.x = 0.0
 					fall_anim(facing_dir)
 				else:
-					if (can_climb or
-						(not can_climb and pressed_vert != last_climb_dir)) and \
+					if (can_climb > 0 or
+						(can_climb == 0 and pressed_vert != last_climb_dir)) and \
 						pressed_vert != 0.0:
 						climb_anim(facing_dir)
 			else:
@@ -694,7 +694,7 @@ func _physics_process(delta : float):
 					sprite.position.x = 0.0
 					enable_gravity()
 					stand_anim(facing_dir)
-				elif can_climb and pressed_vert == 0.0:
+				elif can_climb > 0 and pressed_vert == 0.0:
 					velocity.y = 0.0
 					climb_idle_anim(facing_dir)
 				else:
@@ -702,10 +702,10 @@ func _physics_process(delta : float):
 					# climbing in the opposite direction the player climbed out of
 					# the climbable area
 					velocity.y = 0.0
-					if can_climb or \
-					   (not can_climb and pressed_vert != last_climb_dir):
+					if can_climb > 0 or \
+					   (can_climb == 0 and pressed_vert != last_climb_dir):
 						velocity.y = CLIMB_SPEED * pressed_vert
-						if can_climb:
+						if can_climb > 0:
 							last_climb_dir = pressed_vert
 					else:
 						climb_idle_anim(facing_dir)
@@ -736,14 +736,14 @@ func _physics_process(delta : float):
 								 down_to_ledge,
 								 NO_TURN)
 		Action.SWIMMING:
-			if not in_water:
+			if in_water == 0:
 				# if the player left the water, change actions
 				if grounded:
 					walk_anim(facing_dir)
 				elif velocity.y < 0.0:
-					if can_climb:
+					if can_climb > 0:
 						grab_ray.force_raycast_update()
-					if can_climb and grab_ray.is_colliding():
+					if can_climb > 0 and grab_ray.is_colliding():
 						# grab wall
 						# move against wall
 						velocity.y = 0.0
@@ -786,7 +786,7 @@ func _physics_process(delta : float):
 	# always apply gravity, many grounded/grabbing checks depend on this.
 	velocity.y += gravity * delta
 
-	if in_water:
+	if in_water > 0:
 		if not grounded and \
 		   not grabbing and \
 		   action != Action.CLIMBING and \
