@@ -1,0 +1,29 @@
+[gd_scene load_steps=5 format=4 uid="uid://bdplk2y5hmycd"]
+
+[ext_resource type="Texture2D" uid="uid://clgd47dauvohe" path="res://Sprites/door-commercial-glass.png" id="1_vn21s"]
+[ext_resource type="TileSet" uid="uid://ciw6q6segc75g" path="res://tiles.tres" id="2_577i6"]
+[ext_resource type="Script" path="res://door_area.gd" id="3_uuxoj"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_u0k7n"]
+size = Vector2(24, 1)
+
+[node name="metro" type="Node2D"]
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(0, 8)
+texture = ExtResource("1_vn21s")
+
+[node name="TileMapLayer" type="TileMapLayer" parent="."]
+tile_map_data = PackedByteArray("AAD6/wIAAAAOAAAAAgD7/wIAAAAOAAAAAgD8/wIAAAAOAAAAAgD9/wIAAAAOAAAAAgD+/wIAAAAOAAAAAgD//wIAAAAOAAAAAgAAAAIAAAAOAAAAAgABAAIAAAAOAAAAAgACAAIAAAAOAAAAAgADAAIAAAAOAAAAAgAEAAIAAAAOAAAAAgAFAAIAAAAOAAAAAgAGAAIAAAAOAAAAAgAHAAIAAAAOAAAAAgAIAAIAAAAOAAAAAgAJAAIAAAAOAAAAAgAKAAIAAAAOAAAAAgALAAIAAAAOAAAAAgA=")
+tile_set = ExtResource("2_577i6")
+
+[node name="Player 0" type="Node2D" parent="."]
+position = Vector2(-4, 32)
+
+[node name="DoorArea" type="Area2D" parent="Player 0"]
+script = ExtResource("3_uuxoj")
+destination_scene = "res://backrooms.tscn"
+destination_id = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player 0/DoorArea"]
+shape = SubResource("RectangleShape2D_u0k7n")
