@@ -60,11 +60,12 @@ tile_map_data = PackedByteArray("AAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAACAAAAAAAAAAA
 tile_set = ExtResource("1_u7cjc")
 
 [node name="Door BG" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(1056, 1144, 1080, 1144, 1080, 1184, 1056, 1184)
+position = Vector2(1056, 1144)
+polygon = PackedVector2Array(0, 0, 24, 0, 24, 40, 0, 40)
 vertex_colors = PackedColorArray(0.294641, 0.294641, 0.294641, 1, 0.294641, 0.294641, 0.294641, 1, 0.612036, 0.612036, 0.612036, 1, 0.617455, 0.617455, 0.617455, 1)
 
 [node name="Door" type="Sprite2D" parent="Door BG"]
-position = Vector2(1072, 1160)
+position = Vector2(16, 16)
 texture = ExtResource("2_u2qe3")
 
 [node name="BackBufferCopy" type="BackBufferCopy" parent="."]
@@ -77,7 +78,7 @@ tile_map_data = PackedByteArray("AACCAI4AAAAAAAEAAACCAI8AAAACAAAAAgCCAJAAAAACAAA
 tile_set = ExtResource("4_464cx")
 
 [node name="Player 0" type="Node2D" parent="."]
-position = Vector2(69, 48)
+position = Vector2(959, 1177)
 
 [node name="Player 1" type="Node2D" parent="."]
 position = Vector2(1069, 1184)

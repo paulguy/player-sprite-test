@@ -1,6 +1,9 @@
-[gd_resource type="TileSet" load_steps=3 format=3 uid="uid://ciw6q6segc75g"]
+[gd_resource type="TileSet" load_steps=4 format=3 uid="uid://ciw6q6segc75g"]
 
 [ext_resource type="Texture2D" uid="uid://dvxnoh1r1eq83" path="res://tiles.png" id="1_kvrrq"]
+
+[sub_resource type="TileMapPattern" id="TileMapPattern_acxbj"]
+tile_data = PackedInt32Array(0, 851968, 2, 65536, 851968, 1, 131072, 851968, 1, 196608, 917504, 0, 262144, 917504, 1, 327680, 917504, 2)
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_uyl8j"]
 texture = ExtResource("1_kvrrq")
@@ -132,7 +135,22 @@ texture = ExtResource("1_kvrrq")
 14:2/0 = 0
 15:0/0 = 0
 15:1/0 = 0
+11:2/0 = 0
+11:2/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+12:2/0 = 0
+13:2/0 = 0
+12:1/0 = 0
+12:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+13:1/0 = 0
+6:1/0 = 0
+7:1/next_alternative_id = 2
+7:1/0 = 0
+7:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, 8, -8, 8)
+7:1/1 = 1
+7:1/1/flip_h = true
+7:1/1/physics_layer_0/polygon_0/points = PackedVector2Array(8, -8, 8, 8, -8, 8)
 
 [resource]
 physics_layer_0/collision_layer = 1
 sources/0 = SubResource("TileSetAtlasSource_uyl8j")
+pattern_0 = SubResource("TileMapPattern_acxbj")
