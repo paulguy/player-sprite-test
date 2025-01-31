@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=4 uid="uid://i3syknd2sn1"]
+[gd_scene load_steps=20 format=4 uid="uid://i3syknd2sn1"]
 
 [ext_resource type="TileSet" uid="uid://ciw6q6segc75g" path="res://tiles.tres" id="1_u7cjc"]
 [ext_resource type="Texture2D" uid="uid://clgd47dauvohe" path="res://Sprites/door-commercial-glass.png" id="2_u2qe3"]
@@ -6,7 +6,9 @@
 [ext_resource type="TileSet" uid="uid://cbrqucq4o32my" path="res://lighting.tres" id="4_464cx"]
 [ext_resource type="Script" path="res://climb_area.gd" id="6_ykjhu"]
 [ext_resource type="Script" path="res://water_area.gd" id="7_wealw"]
+[ext_resource type="PackedScene" uid="uid://cy3712n7w53t" path="res://textbox_area.tscn" id="8_bqehp"]
 [ext_resource type="Script" path="res://door_area.gd" id="8_mx0ty"]
+[ext_resource type="Script" path="res://TextboxLine.gd" id="9_lp42a"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_im4mu"]
 size = Vector2(96, 1000)
@@ -31,6 +33,16 @@ shader = ExtResource("3_y06f8")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_qtvo7"]
 shader = ExtResource("3_y06f8")
+
+[sub_resource type="Resource" id="Resource_my424"]
+script = ExtResource("9_lp42a")
+text = "Move left and right with W and D keys. (E to proceed)"
+view_ratio = 2.0
+
+[sub_resource type="Resource" id="Resource_iui7x"]
+script = ExtResource("9_lp42a")
+text = "Space to jump."
+view_ratio = 2.0
 
 [node name="Backrooms" type="Node2D"]
 
@@ -157,3 +169,7 @@ vertex_colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1)
 position = Vector2(0, -68)
 tile_map_data = PackedByteArray("AAA0APr/AAAEAAMAAAAyAPr/AAAGAAMAAAA=")
 tile_set = ExtResource("1_u7cjc")
+
+[node name="TextboxArea" parent="." instance=ExtResource("8_bqehp")]
+position = Vector2(-154, 32)
+text_lines = Array[ExtResource("9_lp42a")]([SubResource("Resource_my424"), SubResource("Resource_iui7x")])
