@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=4 uid="uid://i3syknd2sn1"]
+[gd_scene load_steps=27 format=4 uid="uid://i3syknd2sn1"]
 
 [ext_resource type="TileSet" uid="uid://ciw6q6segc75g" path="res://tiles.tres" id="1_u7cjc"]
 [ext_resource type="Texture2D" uid="uid://clgd47dauvohe" path="res://Sprites/door-commercial-glass.png" id="2_u2qe3"]
@@ -26,7 +26,7 @@ size = Vector2(20, 250)
 size = Vector2(200, 195)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_vhwfc"]
-size = Vector2(586, 198.5)
+size = Vector2(586, 178.5)
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_1rv1k"]
 shader = ExtResource("3_y06f8")
@@ -41,7 +41,43 @@ view_ratio = 2.0
 
 [sub_resource type="Resource" id="Resource_iui7x"]
 script = ExtResource("9_lp42a")
-text = "Space to jump."
+text = "Space to jump.
+E to try to interact with things."
+view_ratio = 2.0
+
+[sub_resource type="Resource" id="Resource_y5uoe"]
+script = ExtResource("9_lp42a")
+text = "Climb up some walls by walking close while on the ground and press up."
+view_ratio = 2.0
+
+[sub_resource type="Resource" id="Resource_tx4w3"]
+script = ExtResource("9_lp42a")
+text = "When on the wall, you can use up and down to move up and down, or press away to fall."
+view_ratio = 2.0
+
+[sub_resource type="Resource" id="Resource_iq5ha"]
+script = ExtResource("9_lp42a")
+text = "At the top, press towards the ledge to climb up."
+view_ratio = 2.0
+
+[sub_resource type="Resource" id="Resource_aqvhe"]
+script = ExtResource("9_lp42a")
+text = "Standing above a ledge, it's possible to climb down by pressing down."
+view_ratio = 2.0
+
+[sub_resource type="Resource" id="Resource_ybxxd"]
+script = ExtResource("9_lp42a")
+text = "Swim up with space.  It's possible also to climb up walls from the ground or when jumping out of the water."
+view_ratio = 2.0
+
+[sub_resource type="Resource" id="Resource_ssh3c"]
+script = ExtResource("9_lp42a")
+text = "Crawl by pressing down.  if there's enough space you'll get lower to allow fitting in to smaller passages.  It's only possible to crawl in the facing direction."
+view_ratio = 2.0
+
+[sub_resource type="Resource" id="Resource_6mb4a"]
+script = ExtResource("9_lp42a")
+text = "Pressing up will get back to a standing position if there's enough space.  Crawling off a ledge will automatically grab the ledge."
 view_ratio = 2.0
 
 [node name="Backrooms" type="Node2D"]
@@ -147,7 +183,7 @@ position = Vector2(290, -62.5)
 shape = SubResource("RectangleShape2D_8skyr")
 
 [node name="CollisionShape2D2" type="CollisionShape2D" parent="WaterArea 1"]
-position = Vector2(672, 62.75)
+position = Vector2(672, 72.75)
 shape = SubResource("RectangleShape2D_vhwfc")
 
 [node name="BackBufferCopy2" type="BackBufferCopy" parent="."]
@@ -170,6 +206,27 @@ position = Vector2(0, -68)
 tile_map_data = PackedByteArray("AAA0APr/AAAEAAMAAAAyAPr/AAAGAAMAAAA=")
 tile_set = ExtResource("1_u7cjc")
 
-[node name="TextboxArea" parent="." instance=ExtResource("8_bqehp")]
+[node name="Movement Tutorial" parent="." instance=ExtResource("8_bqehp")]
 position = Vector2(-154, 32)
+title = "Basics"
 text_lines = Array[ExtResource("9_lp42a")]([SubResource("Resource_my424"), SubResource("Resource_iui7x")])
+
+[node name="Climb Tutorial" parent="." instance=ExtResource("8_bqehp")]
+position = Vector2(117, -16)
+title = "Climbing Up"
+text_lines = Array[ExtResource("9_lp42a")]([SubResource("Resource_y5uoe"), SubResource("Resource_tx4w3"), SubResource("Resource_iq5ha")])
+
+[node name="Climb Tutorial 2" parent="." instance=ExtResource("8_bqehp")]
+position = Vector2(177, -256)
+title = "Climbing Down"
+text_lines = Array[ExtResource("9_lp42a")]([SubResource("Resource_aqvhe")])
+
+[node name="Swim Tutorial" parent="." instance=ExtResource("8_bqehp")]
+position = Vector2(273, -96)
+title = "Swimming"
+text_lines = Array[ExtResource("9_lp42a")]([SubResource("Resource_ybxxd")])
+
+[node name="Crawl Tutorial" parent="." instance=ExtResource("8_bqehp")]
+position = Vector2(344, 0)
+title = "Crawling"
+text_lines = Array[ExtResource("9_lp42a")]([SubResource("Resource_ssh3c"), SubResource("Resource_6mb4a")])

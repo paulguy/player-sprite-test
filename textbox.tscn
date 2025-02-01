@@ -1,27 +1,54 @@
-[gd_scene load_steps=5 format=3 uid="uid://33djf7gddlrm"]
+[gd_scene load_steps=7 format=3 uid="uid://33djf7gddlrm"]
 
 [ext_resource type="Texture2D" uid="uid://o07qulyjesx4" path="res://textbox-border.png" id="1_ryswp"]
+[ext_resource type="Texture2D" uid="uid://bab8vmh7ejlcd" path="res://textbox-title.png" id="2_6plmq"]
 [ext_resource type="Script" path="res://textbox.gd" id="2_bhj23"]
 [ext_resource type="FontFile" uid="uid://dfinjgbkmygu8" path="res://FSEX302-alt.ttf" id="3_yp84b"]
+
+[sub_resource type="Theme" id="Theme_b55sb"]
+default_font = ExtResource("3_yp84b")
+default_font_size = 13
 
 [sub_resource type="Theme" id="Theme_ekoy3"]
 default_font = ExtResource("3_yp84b")
 default_font_size = 13
 
-[node name="Textbox" type="NinePatchRect"]
+[node name="Node2D" type="Node2D"]
+script = ExtResource("2_bhj23")
+
+[node name="Title" type="NinePatchRect" parent="."]
+offset_top = -18.0
+offset_right = 197.0
+texture = ExtResource("2_6plmq")
+region_rect = Rect2(0, 0, 64, 18)
+patch_margin_left = 5
+patch_margin_top = 16
+patch_margin_right = 40
+patch_margin_bottom = 2
+
+[node name="Title T" type="RichTextLabel" parent="Title"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+theme = SubResource("Theme_b55sb")
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+
+[node name="Textbox" type="NinePatchRect" parent="."]
 offset_right = 197.0
 offset_bottom = 154.0
 texture = ExtResource("1_ryswp")
-patch_margin_left = 8
-patch_margin_top = 8
-patch_margin_right = 16
-patch_margin_bottom = 16
-script = ExtResource("2_bhj23")
+patch_margin_left = 6
+patch_margin_top = 3
+patch_margin_right = 6
+patch_margin_bottom = 6
 
-[node name="Textbox Text" type="RichTextLabel" parent="."]
+[node name="Textbox Text" type="RichTextLabel" parent="Textbox"]
 layout_mode = 0
 offset_right = 40.0
 offset_bottom = 40.0
 theme = SubResource("Theme_ekoy3")
+theme_override_colors/default_color = Color(0.662745, 0.662745, 0.662745, 1)
 autowrap_mode = 0
 shortcut_keys_enabled = false

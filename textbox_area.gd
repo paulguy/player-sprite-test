@@ -1,6 +1,7 @@
 extends Area2D
 class_name TextboxArea
 
+@export var title : String = "Title T"
 @export var text_lines : Array[TextboxLine]
 @export var freeze_player : bool = false
 @export var cancelable : bool = true
@@ -22,6 +23,7 @@ func _ready():
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
 	textbox.visible = false
+	textbox.set_title(title)
 
 func _on_body_entered(body: Node2D) -> void:
 	if body is Player:
@@ -46,7 +48,7 @@ func _process(_delta : float):
 					player.process_mode = Node.PROCESS_MODE_DISABLED
 				textbox.visible = false
 				var size : Vector2 = textbox.set_text(text_lines[textbox_showing])
-				textbox.position = Vector2(size.x / -2.0, -size.y - (shape.shape.get_rect().size.y / 2.0))
+				textbox.position.y = -shape.shape.get_rect().size.y / 2.0
 				textbox.visible = true
 		elif cancelable and Input.is_action_just_pressed("cancel"):
 			done()

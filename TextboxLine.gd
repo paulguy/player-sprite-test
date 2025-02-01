@@ -1,7 +1,7 @@
 extends Resource
 class_name TextboxLine
 
-@export var text : String
+@export_multiline var text : String
 @export var view_ratio : float = 1.0
 
 func _init(p_text : String = "", p_view_ratio : float = 1.0):
