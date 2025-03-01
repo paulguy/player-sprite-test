@@ -46,6 +46,15 @@ enum Action {
 	SWIMMING
 }
 
+const ALLOWED_IN_WATER : Dictionary = {
+	# probably more to put in here
+	Action.CLIMBING: null,
+	Action.CLIMBING_IDLE: null,
+	Action.SWIMMING: null,
+	Action.GRABBING: null,
+	Action.LEDGE_CLIMB: null
+}
+
 var action : Action = Action.STANDING
 var intent_dir : float = 1.0
 var facing_dir : float = 1.0
@@ -789,13 +798,11 @@ func _physics_process(delta : float):
 	if in_water > 0:
 		if not grounded and \
 		   not grabbing and \
-		   action != Action.CLIMBING and \
-		   action != Action.CLIMBING_IDLE and \
-		   action != Action.SWIMMING:
+		   action not in ALLOWED_IN_WATER:
 			# if the player has transitioned to being in water without
 			# being transitioned to the swimming state, transition to the swimming
 			# state.  Like falling or jumping in to water.
-			# allow normal actions to work underwater though.
+			# allow some actions to work underwater though.
 			enable_gravity()
 			# could be falling
 			grab_coll.disabled = true
